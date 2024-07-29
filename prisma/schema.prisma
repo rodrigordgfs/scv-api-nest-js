@@ -11,23 +11,104 @@ datasource db {
 }
 
 model Unity {
-  id        String    @id @default(uuid())
-  name      String    @unique
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  Product   Product[]
+  id      BigInt    @id @default(autoincrement())
+  name    String    @unique
+  product Product[]
 
   @@map("unity")
 }
 
+model Category {
+  id       BigInt    @id @default(autoincrement())
+  name     String    @unique
+  products Product[]
+
+  @@map("category")
+}
+
 model Product {
-  id        String   @id @default(uuid())
-  name      String   @unique
-  price     Float
-  unityId   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  unity     Unity    @relation(fields: [unityId], references: [id])
+  id         BigInt     @id @default(autoincrement())
+  name       String     @unique
+  priceSale  Decimal
+  unity      Unity      @relation(fields: [unityId], references: [id])
+  unityId    BigInt     @map("unity_id")
+  categories Category[]
+  saleItem   SaleItem[]
 
   @@map("product")
+}
+
+model Address {
+  id         BigInt  @id @default(autoincrement())
+  street     String
+  number     String
+  complement String?
+  zipCode    String
+  district   String
+  state      String
+  country    String
+  seller     Seller? @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  sellerId   BigInt? @unique
+  client     Client? @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId   BigInt? @unique
+
+  @@map("address")
+}
+
+model Seller {
+  id   BigInt @id @default(autoincrement())
+  name String @unique
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  BigInt   @unique
+  address Address?
+  sale    Sale[]
+
+  @@map("seller")
+}
+
+model User {
+  id       BigInt  @id @default(autoincrement())
+  email    String  @unique
+  password String
+  enabled  Boolean
+  seller   Seller?
+
+  @@map("user")
+}
+
+model Client {
+  id      BigInt   @id @default(autoincrement())
+  name    String   @unique
+  cpf     String   @unique
+  sale    Sale[]
+  address Address?
+
+  @@map("client")
+}
+
+model Sale {
+  id         BigInt     @id @default(autoincrement())
+  date       DateTime   @default(now())
+  toDelivery Boolean
+  delivered  Boolean
+  client     Client     @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  clientId   BigInt
+  seller     Seller     @relation(fields: [sellerId], references: [id], onDelete: Restrict)
+  sellerId   BigInt
+  saleItem   SaleItem[]
+
+  @@map("sale")
+}
+
+model SaleItem {
+  id        BigInt  @id @default(autoincrement())
+  price     Decimal
+  quantity  Decimal
+  sale      Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  saleId    BigInt
+  product   Product @relation(fields: [productId], references: [id])
+  productId BigInt
+
+  @@map("sale_item")
 }
