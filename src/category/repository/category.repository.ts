@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateUnityDTO } from '../dto/create-unity.dto';
-import { UpdateUnityDTO } from '../dto/update-unity.dto';
+import { CreateCategoryDTO } from '../dto/create-category.dto';
+import { UpdateCategoryDTO } from '../dto/update-category.dto';
 
 @Injectable()
-export class UnityRepository {
+export class CategoryRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async paginate(
@@ -14,7 +14,7 @@ export class UnityRepository {
     order: string,
     search: string,
   ) {
-    const results = await this.prisma.unity.findMany({
+    const results = await this.prisma.category.findMany({
       skip: page * size,
       take: Number(size),
       where: {
@@ -25,35 +25,35 @@ export class UnityRepository {
       orderBy: { [sort]: order },
     });
 
-    const totalItems = await this.prisma.unity.count({
+    const totalItems = await this.prisma.category.count({
       where: { name: { contains: search } },
     });
     return { results, totalItems };
   }
 
-  async create(createUnityDTO: CreateUnityDTO) {
-    return await this.prisma.unity.create({
+  async create(createCategoryDTO: CreateCategoryDTO) {
+    return await this.prisma.category.create({
       select: { id: true },
-      data: createUnityDTO,
+      data: createCategoryDTO,
     });
   }
 
-  async update(id: string, updateUnityDTO: UpdateUnityDTO) {
-    return await this.prisma.unity.update({
+  async update(id: string, updateCategoryDTO: UpdateCategoryDTO) {
+    return await this.prisma.category.update({
       where: { id },
       select: { id: true },
-      data: updateUnityDTO,
+      data: updateCategoryDTO,
     });
   }
 
   async delete(id: string) {
-    return await this.prisma.unity.delete({
+    return await this.prisma.category.delete({
       select: { id: true },
       where: { id },
     });
   }
 
   async findById(id: string) {
-    return await this.prisma.unity.findFirstOrThrow({ where: { id } });
+    return await this.prisma.category.findFirstOrThrow({ where: { id } });
   }
 }

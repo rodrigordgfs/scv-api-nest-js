@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProductDTO } from '../dto/create-product.dto';
-import { UpdateUnityDTO } from 'src/unity/dto/update-unity.dto';
+import { UpdateProductDTO } from '../dto/update-product.dto';
 
 @Injectable()
 export class ProductRepository {
@@ -19,6 +19,7 @@ export class ProductRepository {
       take: Number(size),
       include: {
         unity: true,
+        categories: true,
       },
       where: {
         name: {
@@ -35,24 +36,60 @@ export class ProductRepository {
   }
 
   async create(createProductDTO: CreateProductDTO) {
-    return await this.prisma.product.create({ data: createProductDTO });
-  }
-
-  async update(id: string, updateUnityDTO: UpdateUnityDTO) {
-    return await this.prisma.product.update({
-      where: { id },
-      data: updateUnityDTO,
+    return await this.prisma.product.create({
+      select: { id: true },
+      data: {
+        name: createProductDTO.name,
+        price: createProductDTO.price,
+        unityId: createProductDTO.unityId,
+        categories: {
+          connect: createProductDTO.categoryId.map((category) => ({
+            id: category,
+          })),
+        },
+      },
     });
   }
 
+  async update(id: string, updateProductDTO: UpdateProductDTO) {
+    await this.prisma.product.update({
+      where: { id },
+      select: { id: true },
+      data: {
+        categories: {
+          set: [],
+        },
+      },
+    });
+
+    const product = await this.prisma.product.update({
+      where: { id },
+      data: {
+        name: updateProductDTO.name,
+        price: updateProductDTO.price,
+        unityId: updateProductDTO.unityId,
+        categories: {
+          connect: updateProductDTO.categoryId.map((category) => ({
+            id: category,
+          })),
+        },
+      },
+    });
+
+    return product;
+  }
+
   async delete(id: string) {
-    return await this.prisma.product.delete({ where: { id } });
+    return await this.prisma.product.delete({
+      select: { id: true },
+      where: { id },
+    });
   }
 
   async findById(id: string) {
     return await this.prisma.product.findFirstOrThrow({
       where: { id },
-      include: { unity: true },
+      include: { unity: true, categories: true },
     });
   }
 }
